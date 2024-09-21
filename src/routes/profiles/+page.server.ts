@@ -62,54 +62,64 @@ async function seed() {
 }
 
 /** @type {import('./$types').Actions} */
+
+
 export const actions = {
-	
-  // update: async ({ request }) => {
-  //   const data = await request.formData();
-  //   const db = createPool({ connectionString: POSTGRES_URL })
-  //   const client = await db.connect();
-
-  //   const email = data.get('email');
-	// 	const name = data.get('name');
-
-  //   const updateUser = await client.sql`
-  //   UPDATE names
-  //   SET email = ${email}, name = ${name}
-  //   WHERE     ;`
-	
-	// 	return { success: true };
-	// },
-
-  delete: async ({ request }) => {
+  create: async ({ request }) => {
     const data = await request.formData();
-    const db = createPool({ connectionString: POSTGRES_URL })
-    const client = await db.connect();
-
-    const id = data.get('id');
-
-    const deleteUser = await client.sql`
-    DELETE FROM names
-    WHERE id = ${id};`
-	
-		return { success: true };
-	},
-
-	create: async ({request}) => {
-		const data = await request.formData();
-    const db = createPool({ connectionString: POSTGRES_URL })
+    const db = createPool({ connectionString: POSTGRES_URL });
     const client = await db.connect();
 
     const email = data.get('email');
-		const name = data.get('name');
+    const name = data.get('name');
 
     const createUser = await client.sql`
       INSERT INTO names (name, email)
       VALUES (${name}, ${email})
       ON CONFLICT (email) DO NOTHING;
-    `
+    `;
     return { success: true };
-	}
+  },
+
+  update: async ({ request }) => {
+    const data = await request.formData();
+    const db = createPool({ connectionString: POSTGRES_URL });
+    const client = await db.connect();
+  
+    try {
+        const id = data.get('id');
+        const email = data.get('email');
+        const name = data.get('name');
+  
+        await client.sql`
+          UPDATE names
+          SET name = ${name}, email = ${email}
+          WHERE id = ${id};
+        `;
+        return { success: true };
+    } catch (error) {
+        console.error('Update failed:', error);
+        return { success: false, error: 'Update failed' };
+    } finally {
+        await client.release(); // Always release the client
+    }
+},
+
+
+  
+
+  delete: async ({ request }) => {
+    const data = await request.formData();
+    const db = createPool({ connectionString: POSTGRES_URL });
+    const client = await db.connect();
+
+    const id = data.get('id');
+
+    const deleteUser = await client.sql`
+      DELETE FROM names
+      WHERE id = ${id};
+    `;
+    return { success: true };
+  },
 };
-
-
 
